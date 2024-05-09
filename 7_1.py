@@ -36,7 +36,7 @@ GPIO.setup(LED, GPIO.OUT, initial=GPIO.LOW)
 flag = False
 begin = datetime.now()
 end = datetime.now()
-# counter of data field
+# counter of data field (why is doesn't work ?)
 cnt = 0
 print('start of experement', begin)
 try:
