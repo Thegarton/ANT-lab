@@ -33,11 +33,12 @@ GPIO.setup(troyka, GPIO.OUT, initial = GPIO.HIGH)
 GPIO.setup(DAC, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED, GPIO.OUT, initial=GPIO.LOW)
 
+data = []
+
 flag = False
 begin = datetime.now()
 end = datetime.now()
-# counter of data field (why is doesn't work ?)
-cnt = 0
+
 print('start of experement', begin)
 try:
     with open('data.txt', 'w+') as f:
@@ -47,39 +48,36 @@ try:
                 signal_temp = [g for g in signal]
                 signal_temp[i] = 1
                 value = GPIO.output(DAC, signal_temp)
+                time.sleep(0.05)
                 read_comp = GPIO.input(comp)
                 if read_comp == 0:
                     signal = signal_temp
             print("entered value {:^3} -> valtage {:.2f}, DAC signal {}".format(num(signal), abc(num(signal)), signal))    
-            if num(signal) <= 212:
-                cnt += 1
-                f.write(str(num(signal))+'\n')
+            f.write(str(num(signal))+'\n')
+            data.append(num(signal))
+            if num(signal) == 208:
                 flag = True
-            else:
                 GPIO.setup(troyka, GPIO.OUT, initial = GPIO.LOW)
-            if flag and num(signal) <= 160:
-                cnt += 1    
+            if flag and num(signal) <= 168:
                 end = datetime.now()
                 break
         GPIO.output(LED, leds_sig(abc(num(signal))))
 finally:
     GPIO.cleanup()
 
-#постройка схематичного графика
-y = []
-with open('data.txt') as f:
-    temp = f.readline()
-    y.append(int(temp))
-x = np.arange(0,len(y),1)
-plt.plot(x,y)
-
 #запись данных конфигурации 
+cnt = len(data)
 time_of_experement = end - begin
 seconds = time_of_experement.total_seconds()
 T = seconds/cnt
 frec = 1/T
 step = 3.3/256
 
+#постройка схематичного графика
+x_time = np.arange(0, seconds, T)
+plt.plot(x_time, data)
+
+#запсиь в конфигурации в файл
 with open('settings.txt', 'w+') as f:
     f.write(str(frec) + '\n')
     f.write(str(step) + '\n')
@@ -89,6 +87,3 @@ print('duration', seconds)
 print('period', T)
 print('frec', frec)
 print('step', step)
-
-
-
